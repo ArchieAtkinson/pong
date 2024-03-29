@@ -17,7 +17,6 @@ void Paddle::update(double_sec dt, int input_c)
     if (_key_left.isHeld(input_c))
     {
         float next_pos = _pos.x - (_speed * dt.count());
-        LOG.print("{}", next_pos);
         if(next_pos - _size.x/2 >= 0)
         {
             _pos.x = next_pos;
@@ -41,6 +40,8 @@ void Paddle::update(double_sec dt, int input_c)
             _pos.x = win_x - _size.x/2;
         }
     }
+
+    LOG.print("{}", _pos.x);
 }
 
 void Paddle::draw(WINDOW * win)
@@ -50,8 +51,6 @@ void Paddle::draw(WINDOW * win)
         mvwaddch(win, _pos.y, i, ' ');
     }
 
-
-    // if(std::modf(_pos.x, nullptr) && )
     for(int i = 0; i < _size.x; i++)
     {
         mvwaddwstr(win, _pos.y, std::floor(_pos.x - _size.x/2 + i),  _blocks.at(1).data());

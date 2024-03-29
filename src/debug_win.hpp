@@ -11,6 +11,7 @@
 
 #include <curses.h>
 #include <fmt/format.h>
+#include <fmt/chrono.h>
 
 #include "util.hpp"
 
@@ -21,45 +22,31 @@ class DebugWin
 {
     public:
         DebugWin(Pos<int> orign, Size<int> size);
+        void init();
         template <typename... Args>
-        void print(std::string_view fmt, Args&&... args)
+        void print(fmt::format_string<Args...> fstring, Args&&... args)
         {
-            auto now = std::chrono::system_clock::now();
-            std::time_t currentTime = std::chrono::system_clock::to_time_t(now);
-            std::tm* timeInfo = std::localtime(&currentTime);
+            std::string message = fmt::format(fstring, std::forward<Args>(args)...);
+            
+            auto now = std::chrono::high_resolution_clock::now().time_since_epoch();
+            auto now_ms = std::chrono::floor<std::chrono::milliseconds>(now);
 
-            auto duration = now.time_since_epoch();
-            auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(duration) % 1000;
+            std::string log_message = fmt::format("[{:%H:%M:%S}] {}", now_ms, message);
 
-            std::ostringstream oss;
-            oss << std::put_time(timeInfo, "%H:%M:%S");
-            oss << '.' << std::setfill('0') << std::setw(3) << milliseconds.count();
-            std::string timeStr = oss.str();
-
-
-            std::string message = fmt::vformat(fmt, fmt::make_format_args(args...));
-            fmt::vformat(message, fmt::make_format_args(message));
-
-            std::string logMessage = fmt::format("[{}] {}", timeStr, message);
-            fmt::vformat(logMessage, fmt::make_format_args(logMessage));
-
-            if (logMessage.length() > _size.x - 2)
+            if (log_message.length() > _size.x - 2)
             {
-                logMessage = logMessage.substr(0, _size.x - 5);
-                logMessage += "...";
+                log_message = log_message.substr(0, _size.x - 5);
+                log_message += "...";
             }
         
-
-            _logs.push_front(logMessage);
+            _logs.push_front(log_message);
             if(_logs.size() == static_cast<std::size_t>(_size.y) - 1)
             {
                 _logs.pop_back();
             }
             
             std::string filler(_size.x - 2,' ');
-            // werase(_win);
 
-            // drawBox();
             for(std::size_t i = 0; i < _logs.size(); i++)
             {   
                 mvwprintw(_win, i + 1 , 1, "%s", filler.c_str());
@@ -67,8 +54,6 @@ class DebugWin
             }
             wrefresh(_win);
         }
-        void init();
-        void print2(const char *fmt, ...);
     private:
         void drawBox();
         WINDOW * _win = nullptr;

@@ -12,7 +12,6 @@ bool KeyHold::isHeld(int input)
     if(input == _char)
     {
         _active = true;
-        // LOG.print("{}", _count);
         _count = 0;
         return true;
     }

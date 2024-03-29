@@ -17,7 +17,7 @@
             {
             devShells.default = pkgs.mkShell 
             {
-                name = "Road to Cpp Env";
+                name = "pong";
                 buildInputs = with pkgs; 
                 [
                     clang_16
